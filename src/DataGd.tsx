@@ -1,6 +1,8 @@
 import Box from '@mui/material/Box';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Grid from '@mui/material/Grid2';
 import { styled } from '@mui/material/styles';
 import Paper from '@mui/material/Paper';
@@ -65,11 +67,29 @@ export default function DataGd() {
     setTxtTotalExpenses(0);
   };
 
+  const onDeleteClick = (_e: any, row: any) => {
+    console.log('Delete row:', row);
+    console.log('Delete row.id:', row.id);
+    client
+      .delete('/ExpensesManagement/DeleteIncomesExpenses', {
+        params: {
+          id: row.id,
+        },
+      })
+      .then((response) => {
+        if (response.data) {
+          setRecordChangesCount(recordChangesCount + 1);
+        }
+      })
+      .catch((error) => {
+        console.error('Error post incomeExpenses:', error);
+      });
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if ((event.target as HTMLFormElement).checkValidity()) {
-      console.log('validity check passed!');
       client
         .post('/ExpensesManagement/AddOrExpensesIncomes', {
           name: name,
@@ -135,13 +155,22 @@ export default function DataGd() {
       width: 100,
       renderCell: (params) => {
         return (
-          <Button
-            href="#text-buttons"
-            onClick={(e) => onEditClick(e, params.row)}
-            // variant="contained"
-          >
+          <Button href="#text-buttons" onClick={(e) => onEditClick(e, params.row)}>
             Edit
           </Button>
+        );
+      },
+      disableExport: true,
+    },
+    {
+      field: 'delete',
+      headerName: 'Delete',
+      width: 100,
+      renderCell: (params) => {
+        return (
+          <IconButton sx={{ alignSelf: 'center' }} onClick={(e) => onDeleteClick(e, params.row)}>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
         );
       },
       disableExport: true,
