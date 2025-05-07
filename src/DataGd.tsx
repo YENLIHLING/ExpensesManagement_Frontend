@@ -40,15 +40,13 @@ export default function DataGd() {
   const [totalExpenses, setTxtTotalExpenses] = useState(0);
   const [recordChangesCount, setRecordChangesCount] = useState(0);
 
-  const fetchIncomeExpenses = () => {
-    client
-      .get('/ExpensesManagement/RetrieveIncomesExpenses')
-      .then((response) => {
-        setIncomesExpenses(response.data);
-      })
-      .catch((error) => {
-        console.error('Error fetchIncomeExpenses:', error);
-      });
+  const fetchIncomeExpenses = async () => {
+    try {
+      var response = await client.get('/ExpensesManagement/RetrieveIncomesExpenses');
+      setIncomesExpenses(response.data);
+    } catch (error) {
+      console.error('Error fetchIncomeExpenses:', error);
+    }
   };
 
   useEffect(() => {
@@ -86,24 +84,49 @@ export default function DataGd() {
       });
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const onDeleteClick = (_e: any, row: any) => {
+    console.log('Delete row:', row);
+    console.log('Delete row.id:', row.id);
+    client
+      .delete('/ExpensesManagement/DeleteIncomesExpenses', {
+        params: {
+          id: row.id,
+        },
+      })
+      .then((response) => {
+        if (response.data) {
+          setRecordChangesCount(recordChangesCount + 1);
+        }
+      })
+      .catch((error) => {
+        console.error('Error post incomeExpenses:', error);
+      });
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if ((event.target as HTMLFormElement).checkValidity()) {
-      client
-        .post('/ExpensesManagement/AddOrExpensesIncomes', {
+      try {
+        var response = await client.post('/ExpensesManagement/AddOrUpdateExpensesIncomes', {
           name: name,
           total_expenses: totalExpenses,
           total_incomes: totalIncomes,
-        })
-        .then((response) => {
-          if (response.data) {
-            setRecordChangesCount(recordChangesCount + 1);
-          }
-        })
-        .catch((error) => {
-          console.error('Error post incomeExpenses:', error);
         });
+        if (response.data) {
+          var result = JSON.parse(JSON.stringify(response.data));
+          if (result.status > 0) {
+            setRecordChangesCount(recordChangesCount + 1);
+          } else {
+            alert('Error: ' + result.message);
+            return false;
+          }
+        }
+      } catch (error) {
+        console.error('Error post incomeExpenses:', error);
+        return false;
+      }
+
       alert('Record saved successfully!');
     } else {
       alert('Form is invalid! Please check the fields...');
