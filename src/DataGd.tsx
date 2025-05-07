@@ -65,42 +65,30 @@ export default function DataGd() {
     setTxtTotalExpenses(0);
   };
 
-  const onDeleteClick = (_e: any, row: any) => {
-    console.log('Delete row:', row);
-    console.log('Delete row.id:', row.id);
-    client
-      .delete('/ExpensesManagement/DeleteIncomesExpenses', {
+  const onDeleteClick = async (_e: any, row: any) => {
+    if (!window.confirm('Are you sure you want to delete this record?')) {
+      return;
+    }
+    try {
+      var response = await client.delete('/ExpensesManagement/DeleteIncomesExpenses', {
         params: {
           id: row.id,
         },
-      })
-      .then((response) => {
-        if (response.data) {
-          setRecordChangesCount(recordChangesCount + 1);
-        }
-      })
-      .catch((error) => {
-        console.error('Error post incomeExpenses:', error);
       });
-  };
-
-  const onDeleteClick = (_e: any, row: any) => {
-    console.log('Delete row:', row);
-    console.log('Delete row.id:', row.id);
-    client
-      .delete('/ExpensesManagement/DeleteIncomesExpenses', {
-        params: {
-          id: row.id,
-        },
-      })
-      .then((response) => {
-        if (response.data) {
+      if (response.data) {
+        var result = JSON.parse(JSON.stringify(response.data));
+        if (result.status > 0) {
+          alert('Record deleted successfully!');
           setRecordChangesCount(recordChangesCount + 1);
+        } else {
+          alert('Error: ' + result.message);
+          return false;
         }
-      })
-      .catch((error) => {
-        console.error('Error post incomeExpenses:', error);
-      });
+      }
+    } catch (error) {
+      console.error('Error delete incomeExpenses:', error);
+      return false;
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
