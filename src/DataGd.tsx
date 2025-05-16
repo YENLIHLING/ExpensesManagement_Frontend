@@ -1,6 +1,8 @@
 import Box from '@mui/material/Box';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Grid from '@mui/material/Grid2';
 import { styled } from '@mui/material/styles';
 import Paper from '@mui/material/Paper';
@@ -61,6 +63,32 @@ export default function DataGd() {
     setTxtName('');
     setTxtTotalIncomes(0);
     setTxtTotalExpenses(0);
+  };
+
+  const onDeleteClick = async (_e: any, row: any) => {
+    if (!window.confirm('Are you sure you want to delete this record?')) {
+      return;
+    }
+    try {
+      var response = await client.delete('/ExpensesManagement/DeleteIncomesExpenses', {
+        params: {
+          id: row.id,
+        },
+      });
+      if (response.data) {
+        var result = JSON.parse(JSON.stringify(response.data));
+        if (result.status > 0) {
+          alert('Record deleted successfully!');
+          setRecordChangesCount(recordChangesCount + 1);
+        } else {
+          alert('Error: ' + result.message);
+          return false;
+        }
+      }
+    } catch (error) {
+      console.error('Error delete incomeExpenses:', error);
+      return false;
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -138,13 +166,22 @@ export default function DataGd() {
       width: 100,
       renderCell: (params) => {
         return (
-          <Button
-            href="#text-buttons"
-            onClick={(e) => onEditClick(e, params.row)}
-            // variant="contained"
-          >
+          <Button href="#text-buttons" onClick={(e) => onEditClick(e, params.row)}>
             Edit
           </Button>
+        );
+      },
+      disableExport: true,
+    },
+    {
+      field: 'delete',
+      headerName: 'Delete',
+      width: 100,
+      renderCell: (params) => {
+        return (
+          <IconButton sx={{ alignSelf: 'center' }} onClick={(e) => onDeleteClick(e, params.row)}>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
         );
       },
       disableExport: true,
